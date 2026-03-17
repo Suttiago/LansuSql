@@ -1,0 +1,52 @@
+# =========================
+# AMBIENTES VIRTUAIS
+# =========================
+venv/
+.venv/
+env/
+.env/
+
+# =========================
+# CACHE DO PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =========================
+# PYTEST E TESTES
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# =========================
+# BUILD E DISTRIBUIÇÃO (Para quando for publicar a lib)
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =========================
+# IDEs E EDITORES DE CÓDIGO
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# ARQUIVOS DO SISTEMA OPERACIONAL
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# BANCO DE DADOS LOCAL
+# =========================
+*.db
+*.sqlite
+*.sqlite3
