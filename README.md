@@ -4,6 +4,10 @@ A robust, fully-typed Generic Repository library for Python, bridging the gap be
 
 Say goodbye to repetitive database queries. `lansuSql` provides an elegant, Django-style ORM experience for your FastAPI/SQLAlchemy projects, complete with dynamic filtering and native DTO support.
 
+``` bash
+pip install lansuSql
+```
+
 ## Features
 
 - **CRUD Out-of-the-Box:** Standard methods for creating, reading, updating, and deleting records without writing repetitive SQLAlchemy statements.
