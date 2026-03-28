@@ -89,15 +89,14 @@ selected_users = repo.find_by(id__in=[1, 5, 10])
 
 ## 🔍 Supported Operators:
 
-- **__eq:** Equal (Default if no operator is passed)
-- **__neq:** Greater than
-- **__gt:** Greater than or equal to
-- **__gte:** Less than
-- **__lt:** Less than or equal to
-- **__lte:** In a given list
-- **__in:** In a given list
-- **__nin:** Not in a given list
-
+- **`__eq`**: Equal (Default if no operator is passed)
+- **`__neq`**: Not equal
+- **`__gt`**: Greater than
+- **`__gte`**: Greater than or equal to
+- **`__lt`**: Less than
+- **`__lte`**: Less than or equal to
+- **`__in`**: In a given list
+- **`__nin`**: Not in a given list
 
 ## 🛠️ API Reference:
 - **get_by_id(id):** Retrieves a single record by its primary key.
