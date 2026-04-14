@@ -1,10 +1,14 @@
-# lansuSql 🚀
+# lansuSql 
 
 A robust, fully-typed Generic Repository library for Python, bridging the gap between **SQLAlchemy** and **Pydantic**. 
 
 Say goodbye to repetitive database queries. `lansuSql` provides an elegant, Django-style ORM experience for your FastAPI/SQLAlchemy projects, complete with dynamic filtering and native DTO support.
 
-## ✨ Features
+``` bash
+pip install lansuSql
+```
+
+## Features
 
 - **CRUD Out-of-the-Box:** Standard methods for creating, reading, updating, and deleting records without writing repetitive SQLAlchemy statements.
 - **Django-style Dynamic Filters:** Query your database intuitively using operators like `__gt`, `__lt`, `__gte`, `__in`, and more (e.g., `repo.find_by(age__gt=18)`).
@@ -83,19 +87,18 @@ young_actives = repo.find_by(age__lte=25, is_active=True)
 selected_users = repo.find_by(id__in=[1, 5, 10])
 ```
 
-## Supported Operators:
+## 🔍 Supported Operators:
 
-- **__eq:** Equal (Default if no operator is passed)
-- **__neq:** Greater than
-- **__gt:** Greater than or equal to
-- **__gte:** Less than
-- **__lt:** Less than or equal to
-- **__lte:** In a given list
-- **__in:** In a given list
-- **__nin:** Not in a given list
+- **`__eq`**: Equal (Default if no operator is passed)
+- **`__neq`**: Not equal
+- **`__gt`**: Greater than
+- **`__gte`**: Greater than or equal to
+- **`__lt`**: Less than
+- **`__lte`**: Less than or equal to
+- **`__in`**: In a given list
+- **`__nin`**: Not in a given list
 
-
-## API Reference:
+## 🛠️ API Reference:
 - **get_by_id(id):** Retrieves a single record by its primary key.
 - **list_all():** Retrieves all records in the table.
 - **find_by( **kwargs**):** Returns a list of records matching the dynamic filters.
