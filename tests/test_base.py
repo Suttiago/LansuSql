@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from pydantic import BaseModel
-from lansuSql.base import BaseRepository
+from lansuSql.BaseSync import BaseRepository
 
 
 Base = declarative_base()
