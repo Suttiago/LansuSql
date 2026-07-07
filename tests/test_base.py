@@ -81,6 +81,52 @@ def test_find_by_dynamic_filters(user_repo: BaseRepository):
     assert len(results) == 1
     assert results[0].name == "Adulto"
 
+def test_find_by_nin_like_and_ilike(user_repo: BaseRepository):
+    user_repo.create({"name": "Alice", "age": 25}, auto_commit=True)
+    user_repo.create({"name": "Bob", "age": 30}, auto_commit=True)
+    user_repo.create({"name": "Alicia", "age": 35}, auto_commit=True)
+
+    not_bob = user_repo.find_by(name__nin=["Bob"], order_by="age")
+    matching_alias = user_repo.find_by(name__ilike="ali", order_by="-age")
+
+    assert [user.name for user in not_bob] == ["Alice", "Alicia"]
+    assert [user.name for user in matching_alias] == ["Alicia", "Alice"]
+
+def test_find_by_invalid_field_raises(user_repo: BaseRepository):
+    with pytest.raises(ValueError, match="Invalid filter field"):
+        user_repo.find_by(nmae="Alice")
+
+def test_find_by_invalid_operator_raises(user_repo: BaseRepository):
+    with pytest.raises(ValueError, match="Invalid filter operator"):
+        user_repo.find_by(age__between=[18, 30])
+
+def test_find_by_non_strict_ignores_invalid_field(user_repo: BaseRepository):
+    user_repo.create({"name": "Alice", "age": 25}, auto_commit=True)
+
+    results = user_repo.find_by(strict=False, nmae="Alice")
+
+    assert len(results) == 1
+
+def test_list_all_with_limit_offset_and_order(user_repo: BaseRepository):
+    user_repo.create({"name": "Young", "age": 18}, auto_commit=True)
+    user_repo.create({"name": "Middle", "age": 30}, auto_commit=True)
+    user_repo.create({"name": "Old", "age": 50}, auto_commit=True)
+
+    users = user_repo.list_all(order_by="-age", limit=2, offset=1)
+
+    assert [user.name for user in users] == ["Middle", "Young"]
+
+def test_first_count_and_exists(user_repo: BaseRepository):
+    user_repo.create({"name": "Alice", "age": 25}, auto_commit=True)
+    user_repo.create({"name": "Bob", "age": 30}, auto_commit=True)
+
+    first = user_repo.first_by(age__gt=20)
+
+    assert first is not None
+    assert user_repo.count(age__gt=20) == 2
+    assert user_repo.exists(name="Bob") is True
+    assert user_repo.exists(name="Nobody") is False
+
 def test_update_with_dto_exclude_unset(user_repo: BaseRepository):
     user = user_repo.create({"name": "João", "age": 20}, auto_commit=True)
     
@@ -89,6 +135,20 @@ def test_update_with_dto_exclude_unset(user_repo: BaseRepository):
 
     assert updated_user.age == 21
     assert updated_user.name == "João" 
+
+def test_update_invalid_field_raises(user_repo: BaseRepository):
+    user = user_repo.create({"name": "Alice", "age": 20}, auto_commit=True)
+
+    with pytest.raises(ValueError, match="Invalid update field"):
+        user_repo.update(user, {"unknown": "value"})
+
+def test_update_non_strict_ignores_invalid_field(user_repo: BaseRepository):
+    user = user_repo.create({"name": "Alice", "age": 20}, auto_commit=True)
+
+    updated_user = user_repo.update(user, {"unknown": "value"}, strict=False)
+
+    assert updated_user.name == "Alice"
+    assert not hasattr(updated_user, "unknown")
 
 def test_delete(user_repo: BaseRepository, db_session: Session):
     user = user_repo.create({"name": "Deletado", "age": 99}, auto_commit=True)

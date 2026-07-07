@@ -1,6 +1,8 @@
 import operator
-from typing import Any, Dict, List
-from sqlalchemy.sql.elements import BinaryExpression
+from collections.abc import Iterable
+from typing import Any, Dict, List, Type
+
+from sqlalchemy.sql.elements import ColumnElement
 
 OPERATOR_MAP = {
     "eq": operator.eq,   # ==
@@ -11,7 +13,15 @@ OPERATOR_MAP = {
     "lte": operator.le,  # <=
 }
 
-def build_filters(model: any, filter_dict: Dict[str, Any]) -> List[BinaryExpression]:
+SUPPORTED_OPERATORS = {*OPERATOR_MAP.keys(), "in", "nin", "like", "ilike"}
+
+
+def build_filters(
+    model: Type[Any],
+    filter_dict: Dict[str, Any],
+    *,
+    strict: bool = True,
+) -> List[ColumnElement[bool]]:
     filters = []
     
     for key, value in filter_dict.items():
@@ -22,6 +32,10 @@ def build_filters(model: any, filter_dict: Dict[str, Any]) -> List[BinaryExpress
             
         column = getattr(model, field_name, None)
         if column is None:
+            if strict:
+                raise ValueError(
+                    f"Invalid filter field '{field_name}' for model '{model.__name__}'."
+                )
             continue
         
         func = OPERATOR_MAP.get(op)
@@ -29,13 +43,31 @@ def build_filters(model: any, filter_dict: Dict[str, Any]) -> List[BinaryExpress
             filters.append(func(column,value))
             
         elif op == "in":
+            _validate_iterable_filter_value(field_name, op, value)
             filters.append(column.in_(value))
+
+        elif op == "nin":
+            _validate_iterable_filter_value(field_name, op, value)
+            filters.append(column.not_in(value))
         
         elif op == "like":
             filters.append(column.like(f"%{value}%"))
             
         elif op == "ilike":
             filters.append(column.ilike(f"%{value}%"))
+
+        elif strict:
+            supported = ", ".join(sorted(SUPPORTED_OPERATORS))
+            raise ValueError(
+                f"Invalid filter operator '{op}' for field '{field_name}'. "
+                f"Supported operators: {supported}."
+            )
             
     return filters
-            
+
+
+def _validate_iterable_filter_value(field_name: str, op: str, value: Any) -> None:
+    if isinstance(value, (str, bytes)) or not isinstance(value, Iterable):
+        raise ValueError(
+            f"Filter '{field_name}__{op}' expects a non-string iterable value."
+        )

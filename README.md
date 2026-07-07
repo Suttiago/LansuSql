@@ -11,10 +11,11 @@ pip install lansuSql
 ## Features
 
 - **CRUD Out-of-the-Box:** Standard methods for creating, reading, updating, and deleting records without writing repetitive SQLAlchemy statements.
-- **Django-style Dynamic Filters:** Query your database intuitively using operators like `__gt`, `__lt`, `__gte`, `__in`, and more (e.g., `repo.find_by(age__gt=18)`).
+- **Django-style Dynamic Filters:** Query your database intuitively using operators like `__gt`, `__lt`, `__gte`, `__in`, `__nin`, `__like`, and more (e.g., `repo.find_by(age__gt=18)`).
 - **Native Pydantic Support:** Pass Pydantic DTOs directly to `create` and `update` methods. The repository handles the conversion and data extraction automatically.
 - **Fully Typed:** Built with Python `typing` and `Generic` types. Enjoy perfect IDE autocompletion and static type checking.
 - **Zero Coupling:** Keeps your business logic (Services/Controllers) completely independent from SQLAlchemy's `Session` mechanics.
+- **Safer Defaults:** Invalid filters and update fields raise clear errors by default, preventing accidental broad queries.
 
 ## 📦 Installation
 
@@ -24,11 +25,13 @@ pip install lansuSql
 pip install -e .
 ```
 
-#Quick Start
+# Quick Start
 
 **1. Define your SQLAlchemy Model**
-```from sqlalchemy import Column, Integer, String, Boolean  
+```python
+from sqlalchemy import Column, Integer, String, Boolean  
 from sqlalchemy.orm import declarative_base
+
 Base = declarative_base()
 
 class User(Base):
@@ -41,7 +44,8 @@ class User(Base):
 
 ```
 **2. Create a Repository for your Model**
-```from lansuSql.base import BaseRepository
+```python
+from lansuSql import BaseRepository
 
 class UserRepository(BaseRepository[User]):
     # You can add custom methods here if needed, 
@@ -50,7 +54,8 @@ class UserRepository(BaseRepository[User]):
 ```
 
 **3. Use it in your Application (e.g., FastAPI)**
-```from fastapi import Depends
+```python
+from fastapi import Depends
 from sqlalchemy.orm import Session
 from .database import get_db
 
@@ -72,7 +77,8 @@ def create_user(dto: UserCreateDTO, db: Session = Depends(get_db)):
 **Dynamic Filtering (find_by)** 
 The crown jewel of lansuSql is its dynamic filtering capability. You can use magic operators to build complex queries effortlessly:
 
-```repo = UserRepository(User, db)
+```python
+repo = UserRepository(User, db)
 
 # Find exact matches
 admins = repo.find_by(is_active=True, role="ADMIN")
@@ -85,7 +91,28 @@ young_actives = repo.find_by(age__lte=25, is_active=True)
 
 # Find in a list of values
 selected_users = repo.find_by(id__in=[1, 5, 10])
+
+# Exclude values
+non_admins = repo.find_by(role__nin=["ADMIN", "OWNER"])
+
+# Search text
+matching_users = repo.find_by(name__ilike="tiago")
 ```
+
+**Pagination and Ordering**
+
+```python
+# Order ascending by age
+users = repo.list_all(order_by="age")
+
+# Order descending by created_at
+recent_users = repo.find_by(is_active=True, order_by="-created_at")
+
+# Limit and offset
+page = repo.find_by(is_active=True, order_by="-created_at", limit=20, offset=40)
+```
+
+By default, invalid fields and operators raise `ValueError`. If you need the old permissive behavior, pass `strict=False` to `find_by`, `first_by`, `count`, or `exists`.
 
 ## 🔍 Supported Operators:
 
@@ -97,13 +124,18 @@ selected_users = repo.find_by(id__in=[1, 5, 10])
 - **`__lte`**: Less than or equal to
 - **`__in`**: In a given list
 - **`__nin`**: Not in a given list
+- **`__like`**: SQL `LIKE` with `%value%`
+- **`__ilike`**: Case-insensitive SQL `LIKE` with `%value%`
 
 ## 🛠️ API Reference:
 - **get_by_id(id):** Retrieves a single record by its primary key.
-- **list_all():** Retrieves all records in the table.
-- **find_by( **kwargs**):** Returns a list of records matching the dynamic filters.
+- **list_all(limit=None, offset=None, order_by=None):** Retrieves records in the table, optionally ordered and paginated.
+- **find_by(\*\*kwargs):** Returns records matching dynamic filters. Supports `limit`, `offset`, `order_by`, and `strict`.
+- **first_by(\*\*kwargs):** Returns the first record matching dynamic filters.
+- **count(\*\*kwargs):** Counts records matching dynamic filters.
+- **exists(\*\*kwargs):** Returns `True` when at least one record matches dynamic filters.
 - **create(obj_in, auto_commit=False):** Creates a new record from a dict or Pydantic DTO.
-- **update(instance, obj_in, auto_commit=False):** In a given list Updates an existing record using a dict or Pydantic DTO. Ignores unset fields automatically.
+- **update(instance, obj_in, auto_commit=False, strict=True):** Updates an existing record using a dict or Pydantic DTO. Ignores unset Pydantic fields automatically.
 - **delete(instance, auto_commit=False):** Deletes the record from the database.
 - **save(instance, auto_commit=False):** Manually adds and commits an SQLAlchemy instance to the session.
 
