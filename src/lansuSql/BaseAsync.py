@@ -54,6 +54,6 @@ class AsyncBaseRepository(Generic[ModelType]):
         return await self.save(instance, auto_commit)
     
     async def delete(self, instance: ModelType, auto_commit: bool = False) -> None:
-        self.session.delete(instance)
+        await self.session.delete(instance)
         if auto_commit:
             await self.session.commit()
